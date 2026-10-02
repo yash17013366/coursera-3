@@ -1,0 +1,22 @@
+2026-Oct-02-10:08:52 : Preliminaries complete. Initiating ETL process
+2026-Oct-02-10:08:53 : Data extraction complete. Initiating Transformation process
+2026-Oct-02-10:08:55 : Data transformation complete. Initiating Loading process
+2026-Oct-02-10:08:55 : Data saved to CSV file
+2026-Oct-02-10:08:55 : SQL Connection initiated
+2026-Oct-02-10:08:55 : Data loaded to Database as a table, Executing queries
+2026-Oct-02-10:08:55 : Query executed: SELECT * FROM Largest_banks
+2026-Oct-02-10:08:55 : Query executed: SELECT AVG(MC_GBP_Billion) FROM Largest_banks
+2026-Oct-02-10:08:55 : Query executed: SELECT Name FROM Largest_banks LIMIT 5
+2026-Oct-02-10:08:55 : Process Complete
+2026-Oct-02-10:08:55 : Server Connection closed
+2026-Oct-02-10:10:48 : Preliminaries complete. Initiating ETL process
+2026-Oct-02-10:10:49 : Data extraction complete. Initiating Transformation process
+2026-Oct-02-10:10:50 : Data transformation complete. Initiating Loading process
+2026-Oct-02-10:10:50 : Data saved to CSV file
+2026-Oct-02-10:10:50 : SQL Connection initiated
+2026-Oct-02-10:10:50 : Data loaded to Database as a table, Executing queries
+2026-Oct-02-10:10:50 : Query executed: SELECT * FROM Largest_banks
+2026-Oct-02-10:10:50 : Query executed: SELECT AVG(MC_GBP_Billion) FROM Largest_banks
+2026-Oct-02-10:10:50 : Query executed: SELECT Name FROM Largest_banks LIMIT 5
+2026-Oct-02-10:10:50 : Process Complete
+2026-Oct-02-10:10:50 : Server Connection closed

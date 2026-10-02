@@ -1,0 +1,119 @@
+import requests
+import sqlite3
+import numpy as np
+import pandas as pd
+from bs4 import BeautifulSoup
+from datetime import datetime
+
+# ---------------- Variables ----------------
+url = 'https://web.archive.org/web/20230908091635/https://en.wikipedia.org/wiki/List_of_largest_banks'
+exchange_rate_csv = 'https://cf-courses-data.s3.us.cloud-object-storage.appdomain.cloud/IBMSkillsNetwork-PY0221EN-Coursera/labs/v2/exchange_rate.csv'
+table_attribs = ["Name", "MC_USD_Billion"]
+db_name = 'Banks.db'
+table_name = 'Largest_banks'
+csv_path = './Largest_banks_data.csv'
+log_file = 'code_log.txt'
+
+
+# ---------------- Task 1: Logging ----------------
+def log_progress(message):
+    ''' Logs the given message with a timestamp to code_log.txt '''
+    timestamp_format = '%Y-%h-%d-%H:%M:%S'  # Year-Monthname-Day-Hour-Minute-Second
+    now = datetime.now()
+    timestamp = now.strftime(timestamp_format)
+    with open(log_file, "a") as f:
+        f.write(timestamp + ' : ' + message + '\n')
+
+
+# ---------------- Task 2: Extract ----------------
+def extract(url, table_attribs):
+    ''' Extracts the Name and Market Cap (USD Billion) of the banks
+    from the website and returns a DataFrame '''
+    page = requests.get(url).text
+    data = BeautifulSoup(page, 'html.parser')
+    df = pd.DataFrame(columns=table_attribs)
+
+    tables = data.find_all('tbody')
+    rows = tables[0].find_all('tr')
+
+    for row in rows:
+        col = row.find_all('td')
+        if len(col) != 0:
+            # Bank name is the text of the second link in the 2nd column
+            name = col[1].find_all('a')[1]['title']
+            # Market cap is in the 3rd column; strip trailing newline
+            mc = float(col[2].contents[0][:-1])
+            data_dict = {"Name": name, "MC_USD_Billion": mc}
+            df1 = pd.DataFrame(data_dict, index=[0])
+            df = pd.concat([df, df1], ignore_index=True)
+
+    return df
+
+
+# ---------------- Task 3: Transform ----------------
+def transform(df, csv_path):
+    ''' Reads exchange rates from CSV and adds MC_GBP_Billion,
+    MC_EUR_Billion and MC_INR_Billion columns (rounded to 2 decimals) '''
+    exchange_df = pd.read_csv(csv_path)
+    exchange_rate = exchange_df.set_index('Currency').to_dict()['Rate']
+
+    df['MC_GBP_Billion'] = [np.round(x * exchange_rate['GBP'], 2) for x in df['MC_USD_Billion']]
+    df['MC_EUR_Billion'] = [np.round(x * exchange_rate['EUR'], 2) for x in df['MC_USD_Billion']]
+    df['MC_INR_Billion'] = [np.round(x * exchange_rate['INR'], 2) for x in df['MC_USD_Billion']]
+
+    return df
+
+
+# ---------------- Task 4: Load to CSV ----------------
+def load_to_csv(df, output_path):
+    ''' Saves the DataFrame as a CSV file at output_path '''
+    df.to_csv(output_path)
+
+
+# ---------------- Task 5: Load to DB ----------------
+def load_to_db(df, sql_connection, table_name):
+    ''' Saves the DataFrame to a database table with the given name '''
+    df.to_sql(table_name, sql_connection, if_exists='replace', index=False)
+
+
+# ---------------- Task 6: Run query ----------------
+def run_query(query_statement, sql_connection):
+    ''' Runs the query on the database, prints the result and logs it '''
+    print(query_statement)
+    query_output = pd.read_sql(query_statement, sql_connection)
+    print(query_output)
+    log_progress('Query executed: ' + query_statement)
+
+
+# ---------------- Main ETL process ----------------
+log_progress('Preliminaries complete. Initiating ETL process')
+
+df = extract(url, table_attribs)
+print(df)  # Task_2c_extract.png screenshot comes from this output
+log_progress('Data extraction complete. Initiating Transformation process')
+
+df = transform(df, exchange_rate_csv)
+print(df)
+log_progress('Data transformation complete. Initiating Loading process')
+
+load_to_csv(df, csv_path)
+log_progress('Data saved to CSV file')
+
+sql_connection = sqlite3.connect(db_name)
+log_progress('SQL Connection initiated')
+
+load_to_db(df, sql_connection, table_name)
+log_progress('Data loaded to Database as a table, Executing queries')
+
+# Queries
+run_query(f"SELECT * FROM {table_name}", sql_connection)
+run_query(f"SELECT AVG(MC_GBP_Billion) FROM {table_name}", sql_connection)
+run_query(f"SELECT Name FROM {table_name} LIMIT 5", sql_connection)
+log_progress('Process Complete')
+
+sql_connection.close()
+log_progress('Server Connection closed')
+
+
+df = extract(url, table_attribs)
+print(df)
